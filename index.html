@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VUspot – Verkehrsunfall-Assistent</title>
+<meta name="description" content="KI-gestützte Entscheidungshilfe für die Verkehrsunfallaufnahme nach Anlage 3 GA PPr St 5/2008 und BKat OWi.">
+<meta name="theme-color" content="#1a1a18">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VUspot">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%231a1a18'/%3E%3Ctext x='256' y='340' font-size='280' font-family='system-ui' font-weight='700' text-anchor='middle' fill='white'%3EVU%3C/text%3E%3C/svg%3E">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#ffffff;--bg2:#f6f6f4;--bg3:#efefec;
+  --border:rgba(0,0,0,0.09);--border2:rgba(0,0,0,0.16);--border3:rgba(0,0,0,0.26);
+  --text:#1a1a18;--text2:#5c5c58;--text3:#9c9c96;
+  --info-bg:#e6f1fb;--info-txt:#185fa5;
+  --radius-md:8px;--radius-lg:12px;--radius-xl:16px;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --mono:'SF Mono','Fira Code',monospace;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1c1c1a;--bg2:#252523;--bg3:#2e2e2b;
+    --border:rgba(255,255,255,0.09);--border2:rgba(255,255,255,0.16);--border3:rgba(255,255,255,0.26);
+    --text:#f0efeb;--text2:#a0a09a;--text3:#606058;
+    --info-bg:#0c2a4a;--info-txt:#7ab8f5;
+  }
+}
+body{font-family:var(--font);font-size:15px;color:var(--text);background:var(--bg3);min-height:100vh;padding:1.5rem 1rem 5rem;}
+.app{max-width:680px;margin:0 auto;background:var(--bg);border-radius:var(--radius-xl);border:0.5px solid var(--border2);padding:1.5rem;}
+
+/* HEADER */
+.hdr{border-bottom:0.5px solid var(--border);padding-bottom:1rem;margin-bottom:1.5rem}
+.hdr-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.logo{font-size:18px;font-weight:700;letter-spacing:-.03em;color:var(--text)}
+.logo span{color:var(--info-txt)}
+.badge-hdr{font-size:10px;padding:2px 7px;border-radius:4px;background:var(--info-bg);color:var(--info-txt);font-weight:600;letter-spacing:.04em}
+.hdr-sub{font-size:12px;color:var(--text3)}
+
+
+
+/* MODE SELECT */
+.step-q{font-size:17px;font-weight:600;margin-bottom:1.25rem;line-height:1.4;letter-spacing:-.01em}
+.mode-select{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem}
+.mode-card{padding:20px 16px;border:0.5px solid var(--border2);border-radius:var(--radius-lg);background:var(--bg);cursor:pointer;text-align:left;transition:all .15s;position:relative}
+.mode-card:hover{border-color:var(--border3);background:var(--bg2)}
+.mode-icon{font-size:24px;margin-bottom:10px}
+.mode-title{font-size:14px;font-weight:600;margin-bottom:5px}
+.mode-desc{font-size:12px;color:var(--text2);line-height:1.5}
+.mode-tag{position:absolute;top:10px;right:10px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;letter-spacing:.03em}
+.tag-fast{background:var(--info-bg);color:var(--info-txt)}
+.tag-guided{background:#eaf3de;color:#3b6d11}
+@media(prefers-color-scheme:dark){.tag-guided{background:#173404;color:#97c459}}
+
+/* SHARED */
+.progress{display:flex;gap:5px;margin-bottom:1.5rem}
+.pd{height:3px;flex:1;border-radius:2px;background:var(--border);transition:background .3s}
+.pd.active{background:var(--text)}
+.pd.done{background:var(--border2)}
+.step-lbl{font-size:11px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;font-weight:500}
+.row{display:flex;gap:10px;margin-top:1.25rem;align-items:center}
+.btn-back{padding:9px 16px;border-radius:var(--radius-md);border:0.5px solid var(--border2);background:transparent;color:var(--text2);font-size:14px;cursor:pointer;font-weight:500}
+.btn-back:hover{background:var(--bg2)}
+.btn-next{padding:9px 20px;border-radius:var(--radius-md);border:0.5px solid var(--border2);background:var(--bg);color:var(--text);font-size:14px;cursor:pointer;font-weight:600}
+.btn-next:hover{background:var(--bg2)}
+.btn-next:disabled{opacity:.3;cursor:not-allowed}
+.btn-analyze{padding:10px 24px;border-radius:var(--radius-md);border:none;background:var(--text);color:var(--bg);font-size:15px;cursor:pointer;font-weight:600}
+.btn-analyze:hover{opacity:.85}
+.btn-analyze:disabled{opacity:.35;cursor:not-allowed}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* MODE A */
+.input-row{display:flex;gap:8px;align-items:flex-end}
+.ta{flex:1;min-height:110px;resize:vertical;padding:10px 12px;font-size:14px;font-family:var(--font);border:0.5px solid var(--border2);border-radius:var(--radius-md);background:var(--bg);color:var(--text);line-height:1.5}
+.ta:focus{outline:none;border-color:var(--border3)}
+.ta::placeholder{color:var(--text3)}
+.btn-mic{width:44px;height:44px;border-radius:50%;border:0.5px solid var(--border2);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.btn-mic:hover{background:var(--bg2)}
+.btn-mic.rec{background:#fcebeb;border-color:#e24b4a;animation:pulse 1s infinite}
+.btn-mic svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.mic-hint{font-size:11px;color:var(--text3);margin-top:7px}
+.mic-hint.rec{color:#a32d2d}
+
+/* WIZARD TILES */
+.tile-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:1.25rem}
+.tile{padding:14px 12px;border:0.5px solid var(--border2);border-radius:var(--radius-lg);background:var(--bg);cursor:pointer;text-align:left;transition:all .15s}
+.tile:hover{border-color:var(--border3);background:var(--bg2)}
+.tile.sel{border-color:var(--text);border-width:1.5px;background:var(--bg2)}
+.tile-icon{font-size:17px;margin-bottom:6px}
+.tile-title{font-size:14px;font-weight:600;margin-bottom:2px}
+.tile-sub{font-size:12px;color:var(--text2);line-height:1.4}
+.inj-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:1.25rem}
+.inj-tile{padding:12px;border:0.5px solid var(--border2);border-radius:var(--radius-md);background:var(--bg);cursor:pointer;text-align:center;transition:all .15s}
+.inj-tile:hover{background:var(--bg2)}
+.inj-tile.sel{border-width:1.5px}
+.inj-none.sel{border-color:#639922;background:#eaf3de}
+.inj-light.sel{border-color:#ba7517;background:#faeeda}
+.inj-heavy.sel{border-color:#a32d2d;background:#fcebeb}
+.inj-fatal.sel{border-color:#444441;background:var(--bg3)}
+.inj-label{font-size:13px;font-weight:600;margin-top:4px}
+.inj-sub{font-size:11px;color:var(--text2);margin-top:2px}
+.duo-row{display:flex;gap:8px;margin-bottom:1.25rem}
+.duo-tile{flex:1;padding:12px;border:0.5px solid var(--border2);border-radius:var(--radius-md);background:var(--bg);cursor:pointer;text-align:center;font-size:13px;font-weight:600;transition:all .15s}
+.duo-tile:hover{background:var(--bg2)}
+.sel-yes{border-width:1.5px;border-color:#a32d2d;background:#fcebeb;color:#791f1f}
+.sel-no{border-width:1.5px;border-color:#639922;background:#eaf3de;color:#3b6d11}
+.sel-unk{border-width:1.5px;border-color:#ba7517;background:#faeeda;color:#854f0b}
+@media(prefers-color-scheme:dark){
+  .inj-none.sel{background:#173404}.inj-light.sel{background:#412402}
+  .inj-heavy.sel{background:#3d1010}.inj-fatal.sel{background:var(--bg3)}
+  .sel-yes{background:#3d1010;color:#f09595}.sel-no{background:#173404;color:#97c459}.sel-unk{background:#412402;color:#fac775}
+}
+
+/* RESULT */
+.ampel{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:var(--radius-md);margin-bottom:14px;font-size:14px;font-weight:600}
+.ampel-gruen{background:#eaf3de;border:0.5px solid #639922;color:#3b6d11}
+.ampel-gelb{background:#faeeda;border:0.5px solid #ba7517;color:#854f0b}
+.ampel-rot{background:#fcebeb;border:0.5px solid #a32d2d;color:#791f1f}
+.ampel-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.dot-gruen{background:#639922}.dot-gelb{background:#ef9f27}.dot-rot{background:#e24b4a}
+@media(prefers-color-scheme:dark){
+  .ampel-gruen{background:#173404;border-color:#3b6d11;color:#97c459}
+  .ampel-gelb{background:#412402;border-color:#854f0b;color:#fac775}
+  .ampel-rot{background:#3d1010;border-color:#791f1f;color:#f09595}
+}
+.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+.mc{background:var(--bg2);border-radius:var(--radius-md);padding:10px 12px}
+.mc-lbl{font-size:10px;color:var(--text3);margin-bottom:4px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.mc-val{font-size:14px;font-weight:600;line-height:1.3}
+.chip{display:inline-block;font-size:11px;padding:2px 7px;border-radius:4px;background:var(--bg2);border:0.5px solid var(--border2);font-family:var(--mono);margin:1px}
+.res-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:10px}
+.res-row{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:0.5px solid var(--border);gap:12px}
+.res-row:last-child{border-bottom:none}
+.res-lbl{font-size:13px;color:var(--text2);min-width:130px;flex-shrink:0}
+.res-val{font-size:13px;font-weight:500;text-align:right;line-height:1.6}
+.warn-box{background:#faeeda;border:0.5px solid #ba7517;border-radius:var(--radius-md);padding:9px 12px;font-size:13px;color:#854f0b;margin-bottom:10px}
+.danger-box{background:#fcebeb;border:0.5px solid #a32d2d;border-radius:var(--radius-md);padding:9px 12px;font-size:13px;color:#791f1f;margin-bottom:10px}
+@media(prefers-color-scheme:dark){
+  .warn-box{background:#412402;border-color:#854f0b;color:#fac775}
+  .danger-box{background:#3d1010;border-color:#791f1f;color:#f09595}
+}
+.beteiligte{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.bet-box{border-radius:var(--radius-md);padding:10px 12px;border:0.5px solid}
+.bet-01{background:#fcebeb;border-color:#f09595}
+.bet-02{background:#eaf3de;border-color:#c0dd97}
+@media(prefers-color-scheme:dark){
+  .bet-01{background:#3d1010;border-color:#791f1f}
+  .bet-02{background:#173404;border-color:#3b6d11}
+}
+.bet-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.bet-01 .bet-lbl{color:#a32d2d}.bet-02 .bet-lbl{color:#3b6d11}
+.bet-val{font-size:13px;font-weight:500;color:var(--text);line-height:1.4}
+.bet-tbnr{font-size:11px;font-weight:600;margin-top:5px;padding:2px 8px;border-radius:20px;display:inline-block}
+.bet-01 .bet-tbnr{background:#f7c1c1;color:#791f1f}
+.bet-02 .bet-tbnr{background:#c0dd97;color:#27500a}
+@media(prefers-color-scheme:dark){
+  .bet-01 .bet-tbnr{background:#5a1a1a;color:#f09595}
+  .bet-02 .bet-tbnr{background:#1e4a0e;color:#97c459}
+}
+.oq-list{list-style:none;padding:0}
+.oq-list li{padding:7px 0;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--text2);padding-left:16px;position:relative;line-height:1.5}
+.oq-list li::before{content:"?";position:absolute;left:0;color:var(--text3);font-weight:700}
+.oq-list li:last-child{border-bottom:none}
+.sec-lbl{font-size:10px;color:var(--text3);letter-spacing:.06em;margin-bottom:8px;font-weight:700;text-transform:uppercase}
+.btn-neu{margin-top:1.25rem;padding:9px 18px;border-radius:var(--radius-md);border:0.5px solid var(--border2);background:transparent;color:var(--text2);font-size:14px;cursor:pointer;font-weight:500}
+.btn-neu:hover{background:var(--bg2)}
+.btn-chat{margin-top:8px;margin-left:8px;padding:9px 18px;border-radius:var(--radius-md);border:0.5px solid var(--border2);background:transparent;color:var(--text2);font-size:14px;cursor:pointer;font-weight:500}
+.btn-chat:hover{background:var(--bg2)}
+
+/* FOOTER DISCLAIMER */
+.footer{max-width:680px;margin:1.25rem auto 0;padding:0 0.5rem;text-align:center}
+.footer-disc{font-size:11px;color:var(--text3);line-height:1.6;padding:10px 14px;border:0.5px solid var(--border);border-radius:var(--radius-md);background:var(--bg)}
+.footer-disc strong{color:var(--text2)}
+.mode-hint{font-size:12px;color:var(--text3);margin-top:1rem;padding-top:1rem;border-top:0.5px solid var(--border)}
+</style>
+</head>
+<body>
+
+
+<!-- ── APP ── -->
+<div class="app">
+  <div class="hdr">
+    <div class="hdr-top">
+      <span class="logo">VU<span>spot</span></span>
+      <span class="badge-hdr">BETA</span>
+    </div>
+    <div class="hdr-sub">Entscheidungshilfe Verkehrsunfallaufnahme · Anlage 3 · BKat OWi · 01 = Verursacher · 02 = Geschädigter</div>
+  </div>
+
+  <!-- START -->
+  <div id="start-wrap">
+    <div class="step-q">Wie möchtest du den Unfall erfassen?</div>
+    <div class="mode-select">
+      <button class="mode-card" onclick="startMode('direkt')">
+        <span class="mode-tag tag-fast">SCHNELL</span>
+        <div class="mode-icon">🎤</div>
+        <div class="mode-title">Sprache / Freitext</div>
+        <div class="mode-desc">Unfall frei beschreiben — per Sprache oder tippen. KI ermittelt alle Parameter sofort.</div>
+      </button>
+      <button class="mode-card" onclick="startMode('wizard')">
+        <span class="mode-tag tag-guided">GEFÜHRT</span>
+        <div class="mode-icon">☑</div>
+        <div class="mode-title">Schritt für Schritt</div>
+        <div class="mode-desc">Situation, Verletzte, Alkohol, Fahrerflucht auswählen — Ausschlussverfahren bis zum Ergebnis.</div>
+      </button>
+    </div>
+    <div class="mode-hint">Beide Modi nutzen dieselbe KI-Engine und liefern identische Ergebnisse.</div>
+  </div>
+
+  <!-- MODUS A: DIREKT -->
+  <div id="direkt-wrap" style="display:none">
+    <div class="step-lbl">Modus: Sprache / Freitext</div>
+    <div class="step-q">Was ist passiert?</div>
+    <div class="input-row">
+      <textarea class="ta" id="txt-a" placeholder="z. B.: Fahrzeug 1 fuhr auf Hauptstraße. Fahrzeug 2 kam aus Nebenstraße, missachtete Vorfahrt. Kollision. Leichtverletzte Person..."></textarea>
+      <button class="btn-mic" id="micBtn" title="Spracheingabe starten">
+        <svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3M8 22h8"/></svg>
+      </button>
+    </div>
+    <div class="mic-hint" id="micHint">Mikrofon-Taste drücken und sprechen</div>
+    <div class="row">
+      <button class="btn-back" onclick="goStart()">← Zurück</button>
+      <button class="btn-analyze" id="btn-a" onclick="analyzeDirectly()">Analysieren</button>
+    </div>
+  </div>
+
+  <!-- MODUS B: WIZARD -->
+  <div id="wizard-wrap" style="display:none">
+    <div class="progress" id="wprog">
+      <div class="pd active" id="wp0"></div>
+      <div class="pd" id="wp1"></div>
+      <div class="pd" id="wp2"></div>
+      <div class="pd" id="wp3"></div>
+      <div class="pd" id="wp4"></div>
+    </div>
+
+    <!-- W0: Situation -->
+    <div id="w0">
+      <div class="step-lbl">Schritt 1 von 5</div>
+      <div class="step-q">Was war die Hauptsituation?</div>
+      <div class="tile-grid">
+        <button class="tile" onclick="wSel('sit',0,this)"><div class="tile-icon">↑↑</div><div class="tile-title">Auffahrunfall</div><div class="tile-sub">Auffahren auf vorausfahrendes oder wartendes Fahrzeug</div></button>
+        <button class="tile" onclick="wSel('sit',1,this)"><div class="tile-icon">↗←</div><div class="tile-title">Abbiegen</div><div class="tile-sub">Zusammenstoß beim Rechts- oder Linksabbiegen</div></button>
+        <button class="tile" onclick="wSel('sit',2,this)"><div class="tile-icon">✚</div><div class="tile-title">Kreuzung / Vorfahrt</div><div class="tile-sub">Einbiegen, Kreuzen, Vorfahrt missachtet</div></button>
+        <button class="tile" onclick="wSel('sit',3,this)"><div class="tile-icon">P</div><div class="tile-title">Ruhender Verkehr</div><div class="tile-sub">Parken, Ein-/Ausparken, Türöffnen</div></button>
+        <button class="tile" onclick="wSel('sit',4,this)"><div class="tile-icon">F</div><div class="tile-title">Fußgänger</div><div class="tile-sub">Fahrzeug trifft Fußgänger, Furt, Überweg</div></button>
+        <button class="tile" onclick="wSel('sit',5,this)"><div class="tile-icon">⇄</div><div class="tile-title">Längsverkehr</div><div class="tile-sub">Spurwechsel, Überholen, Gegenverkehr</div></button>
+        <button class="tile" onclick="wSel('sit',6,this)"><div class="tile-icon">↖</div><div class="tile-title">Abkommen</div><div class="tile-sub">Alleinunfall, kein weiterer Beteiligter</div></button>
+        <button class="tile" onclick="wSel('sit',7,this)"><div class="tile-icon">···</div><div class="tile-title">Sonstiges</div><div class="tile-sub">Tier, Ladung, Hindernis</div></button>
+      </div>
+      <div class="row">
+        <button class="btn-back" onclick="goStart()">← Zurück</button>
+        <button class="btn-next" id="btn-w0" onclick="wStep(1)" disabled>Weiter</button>
+      </div>
+    </div>
+
+    <!-- W1: Verletzte -->
+    <div id="w1" style="display:none">
+      <div class="step-lbl">Schritt 2 von 5</div>
+      <div class="step-q">Wurden Personen verletzt?</div>
+      <div class="inj-grid">
+        <button class="inj-tile inj-none" onclick="wSel('inj',0,this)"><div style="font-size:20px">■</div><div class="inj-label" style="color:#3b6d11">Keine Verletzten</div><div class="inj-sub">Nur Sachschaden</div></button>
+        <button class="inj-tile inj-light" onclick="wSel('inj',1,this)"><div style="font-size:20px">▲</div><div class="inj-label" style="color:#854f0b">Leichtverletzte</div><div class="inj-sub">Keine stationäre Aufnahme</div></button>
+        <button class="inj-tile inj-heavy" onclick="wSel('inj',2,this)"><div style="font-size:20px">▼</div><div class="inj-label" style="color:#791f1f">Schwerverletzte</div><div class="inj-sub">Stationäre Behandlung nötig</div></button>
+        <button class="inj-tile inj-fatal" onclick="wSel('inj',3,this)"><div style="font-size:20px">■</div><div class="inj-label">Getötete</div><div class="inj-sub">Tod innerhalb 30 Tage</div></button>
+      </div>
+      <div class="row">
+        <button class="btn-back" onclick="wStep(0)">Zurück</button>
+        <button class="btn-next" id="btn-w1" onclick="wStep(2)" disabled>Weiter</button>
+      </div>
+    </div>
+
+    <!-- W2: Alkohol -->
+    <div id="w2" style="display:none">
+      <div class="step-lbl">Schritt 3 von 5</div>
+      <div class="step-q">Alkohol oder Drogen beteiligt?</div>
+      <div class="duo-row">
+        <button class="duo-tile" onclick="wSel('alc','ja',this)">Ja — nachgewiesen</button>
+        <button class="duo-tile" onclick="wSel('alc','nein',this)">Nein</button>
+        <button class="duo-tile" onclick="wSel('alc','unklar',this)">Unklar / Prüfung läuft</button>
+      </div>
+      <div class="row">
+        <button class="btn-back" onclick="wStep(1)">Zurück</button>
+        <button class="btn-next" id="btn-w2" onclick="wStep(3)" disabled>Weiter</button>
+      </div>
+    </div>
+
+    <!-- W3: Fahrerflucht -->
+    <div id="w3" style="display:none">
+      <div class="step-lbl">Schritt 4 von 5</div>
+      <div class="step-q">Fahrerflucht / unerlaubtes Entfernen vom Unfallort?</div>
+      <div class="duo-row">
+        <button class="duo-tile" onclick="wSel('flucht','ja',this)">Ja — §142 StGB</button>
+        <button class="duo-tile" onclick="wSel('flucht','nein',this)">Nein</button>
+      </div>
+      <div class="row">
+        <button class="btn-back" onclick="wStep(2)">Zurück</button>
+        <button class="btn-next" id="btn-w3" onclick="wStep(4)" disabled>Weiter</button>
+      </div>
+    </div>
+
+    <!-- W4: Details + Analyse -->
+    <div id="w4" style="display:none">
+      <div class="step-lbl">Schritt 5 von 5</div>
+      <div class="step-q">Weitere Details? <span style="font-size:14px;font-weight:400;color:var(--text2)">(optional)</span></div>
+      <div class="input-row">
+        <textarea class="ta" id="txt-b" placeholder="Optional: Straßenverhältnisse, Schilderung der Beteiligten, Zeugenaussagen, besondere Umstände..."></textarea>
+        <button class="btn-mic" id="micBtn2" title="Spracheingabe starten">
+          <svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3M8 22h8"/></svg>
+        </button>
+      </div>
+      <div class="mic-hint" id="micHint2">Mikrofon-Taste drücken und sprechen</div>
+      <div class="row">
+        <button class="btn-back" onclick="wStep(3)">Zurück</button>
+        <button class="btn-analyze" id="btn-w4" onclick="analyzeWizard()">Analysieren</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ERGEBNIS -->
+  <div id="result-wrap" style="display:none">
+    <div id="result-content"></div>
+    <div>
+      <button class="btn-neu" onclick="goStart()">Neuer Unfall</button>
+      <button class="btn-chat" id="btn-vertiefe" style="display:none" onclick="alert('Diese Funktion ist nur im Claude.ai-Chat verfügbar.')">Im Chat vertiefen ↗</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER DISCLAIMER -->
+<div class="footer">
+  <div class="footer-disc">
+    <strong>Entscheidungshilfe — kein Rechtsgutachten.</strong> Alle Ergebnisse eigenverantwortlich prüfen. Fehler sind möglich. Unabhängiges Hilfsmittel ohne Verbindung zu einer Behörde.
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────
+// Trage hier deinen Anthropic API-Key ein:
+var API_KEY = 'DEIN-API-KEY-HIER';
+// Erhältlich unter: https://console.anthropic.com
+// Kosten: ca. 0.002–0.01 € pro Analyse
+// ────────────────────────────────────────────────────────
+
+var state = {sit:-1, inj:-1, alc:'', flucht:''};
+var sitLabels = ['Auffahrunfall','Abbiegen','Kreuzung/Vorfahrt','Ruhender Verkehr','Fußgänger','Längsverkehr','Abkommen von Fahrbahn','Sonstiges'];
+var injLabels = ['Keine Verletzten','Leichtverletzte','Schwerverletzte','Getötete'];
+var lastAnalysis = '';
+var recog = null, isRec = false, activeMic = null;
+
+/* NAVIGATION */
+function show(id) { document.getElementById(id).style.display = 'block'; }
+function hide(id) { document.getElementById(id).style.display = 'none'; }
+
+function goStart() {
+  hide('direkt-wrap'); hide('wizard-wrap'); hide('result-wrap');
+  show('start-wrap');
+  state = {sit:-1, inj:-1, alc:'', flucht:''};
+  lastAnalysis = '';
+  for (var i=0; i<5; i++) {
+    var w = document.getElementById('w'+i);
+    if (w) w.style.display = 'none';
+  }
+  ['btn-w0','btn-w1','btn-w2','btn-w3'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.disabled = true;
+  });
+  document.querySelectorAll('.tile,.inj-tile,.duo-tile').forEach(function(t) {
+    t.className = t.className.replace(/\s*(sel|sel-yes|sel-no|sel-unk)\b/g,'');
+  });
+  var ta = document.getElementById('txt-a'); if (ta) ta.value = '';
+  var tb = document.getElementById('txt-b'); if (tb) tb.value = '';
+}
+
+function startMode(m) {
+  hide('start-wrap');
+  if (m === 'direkt') { show('direkt-wrap'); }
+  else { show('wizard-wrap'); wStep(0); }
+}
+
+function wStep(n) {
+  for (var i=0; i<5; i++) {
+    var el = document.getElementById('w'+i);
+    if (el) el.style.display = (i === n) ? 'block' : 'none';
+    var pd = document.getElementById('wp'+i);
+    if (pd) pd.className = 'pd' + (i < n ? ' done' : i === n ? ' active' : '');
+  }
+}
+
+function wSel(field, val, el) {
+  if (field === 'sit') {
+    state.sit = val;
+    document.querySelectorAll('#w0 .tile').forEach(function(t){t.classList.remove('sel');});
+    el.classList.add('sel');
+    document.getElementById('btn-w0').disabled = false;
+  } else if (field === 'inj') {
+    state.inj = val;
+    document.querySelectorAll('#w1 .inj-tile').forEach(function(t){t.classList.remove('sel');});
+    el.classList.add('sel');
+    document.getElementById('btn-w1').disabled = false;
+  } else if (field === 'alc') {
+    state.alc = val;
+    document.querySelectorAll('#w2 .duo-tile').forEach(function(t){t.className='duo-tile';});
+    el.classList.add(val==='ja'?'sel-yes':val==='nein'?'sel-no':'sel-unk');
+    document.getElementById('btn-w2').disabled = false;
+  } else if (field === 'flucht') {
+    state.flucht = val;
+    document.querySelectorAll('#w3 .duo-tile').forEach(function(t){t.className='duo-tile';});
+    el.classList.add(val==='ja'?'sel-yes':'sel-no');
+    document.getElementById('btn-w3').disabled = false;
+  }
+}
+
+/* SPRACHEINGABE — mobil-optimiert
+   Strategie: kein continuous-Modus (bricht auf Mobile ab / doppelt).
+   Stattdessen: Segmente werden gesammelt und akkumuliert.
+   Bei onend → wenn noch aktiv → neues Segment starten.
+   Ergebnis: nur finale Segmente werden zusammengefügt, keine Duplikate. */
+var micTarget = null;
+var micHintId = null;
+var micBtnId  = null;
+var accumulated = '';   // bereits bestätigte finale Segmente
+
+function toggleRec(btnId, targetId, hintId) {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var btn  = document.getElementById(btnId);
+  var hint = document.getElementById(hintId);
+
+  if (!SR) {
+    hint.textContent = 'Spracheingabe nicht verfügbar — bitte Text tippen';
+    return;
+  }
+
+  if (isRec && micBtnId === btnId) {
+    /* — STOPP — */
+    isRec = false;
+    btn.classList.remove('rec');
+    hint.textContent = 'Aufnahme beendet — Text kann bearbeitet werden';
+    hint.classList.remove('rec');
+    if (recog) { try { recog.stop(); } catch(e){} }
+    return;
+  }
+
+  /* — START — */
+  /* anderes Mikro stoppen falls aktiv */
+  if (isRec && recog) { try { recog.stop(); } catch(e){} }
+  isRec      = true;
+  micBtnId   = btnId;
+  micTarget  = targetId;
+  micHintId  = hintId;
+  accumulated = (document.getElementById(targetId).value || '').trim();
+  if (accumulated) accumulated += ' ';
+
+  /* altes Mikro-UI zurücksetzen */
+  document.querySelectorAll('.btn-mic').forEach(function(b){ b.classList.remove('rec'); });
+  document.querySelectorAll('.mic-hint').forEach(function(h){ h.classList.remove('rec'); });
+  btn.classList.add('rec');
+  hint.textContent = 'Aufnahme läuft — Mikro erneut drücken zum Stoppen';
+  hint.classList.add('rec');
+
+  startSegment();
+}
+
+function startSegment() {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recog = new SR();
+  recog.lang = 'de-DE';
+  recog.continuous = false;      /* ← entscheidend für Mobile */
+  recog.interimResults = true;
+  recog.maxAlternatives = 1;
+
+  recog.onresult = function(e) {
+    var interim = '';
+    var finalTxt = '';
+    for (var i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) {
+        finalTxt += e.results[i][0].transcript;
+      } else {
+        interim += e.results[i][0].transcript;
+      }
+    }
+    /* Vorschau: akkumuliert + aktuelles Interim */
+    var ta = document.getElementById(micTarget);
+    if (ta) ta.value = accumulated + (finalTxt || interim);
+    /* Finales Segment in accumulated übernehmen */
+    if (finalTxt) {
+      accumulated += finalTxt;
+      if (!accumulated.endsWith(' ')) accumulated += ' ';
+    }
+  };
+
+  recog.onerror = function(e) {
+    if (e.error === 'no-speech') {
+      /* kein Fehler — einfach neu starten wenn noch aktiv */
+      if (isRec) setTimeout(startSegment, 300);
+      return;
+    }
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      isRec = false;
+      var btn  = document.getElementById(micBtnId);
+      var hint = document.getElementById(micHintId);
+      if (btn)  btn.classList.remove('rec');
+      if (hint) { hint.textContent = 'Mikrofon-Zugriff verweigert — Berechtigung prüfen'; hint.classList.remove('rec'); }
+      return;
+    }
+    /* andere Fehler: kurz warten, neu starten */
+    if (isRec) setTimeout(startSegment, 500);
+  };
+
+  recog.onend = function() {
+    /* Segment beendet — neues starten solange aktiv */
+    if (isRec) setTimeout(startSegment, 150);
+  };
+
+  try { recog.start(); } catch(e) {
+    if (isRec) setTimeout(startSegment, 400);
+  }
+}
+
+document.getElementById('micBtn').onclick  = function(){ toggleRec('micBtn',  'txt-a', 'micHint');  };
+document.getElementById('micBtn2').onclick = function(){ toggleRec('micBtn2', 'txt-b', 'micHint2'); };
+
+/* API */
+var SYS = 'Du bist ein Fachsystem für Verkehrsunfallaufnahme nach Anlage 3 (GA PPr St 5/2008) und BKat OWi.\n'
+  + 'WICHTIG: Verursacher = Beteiligter 01, Geschädigter = Beteiligter 02.\n'
+  + 'Antworte NUR mit JSON, kein Markdown, kein Text außerhalb.\n'
+  + 'Format:\n'
+  + '{"unfallart":"1","unfallart_text":"...","unfalltyp":"7","unfalltyp_text":"...",'
+  + '"kategorie":"5","kategorie_text":"...","ursachen":["01 – Alkohol"],'
+  + '"tbnr":["101054","261408"],"konkretisierung":false,'
+  + '"bet01":"Wer ist Verursacher und was hat er getan","bet01_tbnr":"101054",'
+  + '"bet02":"Wer ist Geschädigter",'
+  + '"straftat_ampel":"gruen","straftat_text":"Keine Straftat erkennbar.",'
+  + '"straftaten_details":"","warnungen":[],'
+  + '"offene_fragen":["War das Fahrzeug fahrbereit?"],'
+  + '"zusammenfassung":"Kurze Beschreibung."}\n'
+  + 'straftat_ampel: gruen=nur OWi | gelb=Straftat prüfen | rot=Straftat wahrscheinlich\n'
+  + 'Verletzte→mind.gelb(§229 StGB). Getötete→rot(§222 StGB). Alkohol→mind.gelb(§315c/316 StGB). Fahrerflucht→mind.gelb(§142 StGB).\n'
+  + 'Immer alle zutreffenden TBNR angeben (nicht nur eine). Bei Radfahrern: 261408 (Straftat) oder 261401 (OWi) je nach Promillewert.';
+
+async function callAPI(userMsg, btnEl) {
+  btnEl.disabled=true;
+  btnEl.innerHTML='<span class="spinner"></span>Analysiert...';
+  try {
+    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYS,
+        messages: [{role:'user', content: userMsg}]
+      })
+    });
+    var data = await resp.json();
+    if (data.error) throw new Error(data.error.message);
+    var raw = (data.content||[]).filter(function(b){return b.type==='text';})[0]?.text || '{}';
+    var r = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    lastAnalysis = 'Eingabe:\n'+userMsg+'\n\nErgebnis:\nUnfallart '+r.unfallart+' – '+r.unfallart_text
+      +'\nTyp '+r.unfalltyp+' – '+r.unfalltyp_text
+      +'\nKat. '+r.kategorie+' – '+r.kategorie_text
+      +'\nTBNR: '+r.tbnr.join(', ')
+      +'\n01 (Verursacher): '+r.bet01
+      +'\n02 (Geschädigter): '+r.bet02
+      +'\n'+r.zusammenfassung;
+    showResult(r);
+  } catch(e) {
+    btnEl.disabled=false; btnEl.innerHTML='Analysieren';
+    var msg = e.message||'Unbekannter Fehler';
+    if (API_KEY === 'DEIN-API-KEY-HIER') {
+      alert('Kein API-Key eingetragen.\n\nBitte öffne die index.html und trage deinen Anthropic API-Key bei\nvar API_KEY = \'...\'\nein.\n\nAPI-Key erhältlich unter: https://console.anthropic.com');
+    } else {
+      alert('API-Fehler: '+msg+'\n\nBitte API-Key prüfen und erneut versuchen.');
+    }
+  }
+}
+
+function analyzeDirectly() {
+  var txt = (document.getElementById('txt-a').value||'').trim() || 'Keine weiteren Angaben';
+  callAPI('Hergang (Freitext): '+txt, document.getElementById('btn-a'));
+}
+
+function analyzeWizard() {
+  var sitL = state.sit>=0 ? sitLabels[state.sit] : 'unbekannt';
+  var injL = state.inj>=0 ? injLabels[state.inj] : 'unbekannt';
+  var txt = (document.getElementById('txt-b').value||'').trim();
+  var msg = 'Situation: '+sitL+'\nVerletzungsgrad: '+injL
+    +'\nAlkohol/Drogen: '+(state.alc||'nicht angegeben')
+    +'\nFahrerflucht: '+(state.flucht||'nicht angegeben')
+    +(txt ? '\nWeitere Details: '+txt : '');
+  callAPI(msg, document.getElementById('btn-w4'));
+}
+
+/* ERGEBNIS ANZEIGEN */
+function showResult(r) {
+  hide('direkt-wrap'); hide('wizard-wrap'); show('result-wrap');
+  var ac = r.straftat_ampel==='rot'?'ampel-rot':r.straftat_ampel==='gelb'?'ampel-gelb':'ampel-gruen';
+  var dc = r.straftat_ampel==='rot'?'dot-rot':r.straftat_ampel==='gelb'?'dot-gelb':'dot-gruen';
+  var at = r.straftat_ampel==='rot'?'Straftat wahrscheinlich':r.straftat_ampel==='gelb'?'Straftat prüfen':'Nur Ordnungswidrigkeit';
+  var h = '';
+
+  h += '<div class="ampel '+ac+'"><div class="ampel-dot '+dc+'"></div>'
+    +'<div><strong>'+at+'</strong> &mdash; '+(r.straftat_text||'')+'</div></div>';
+  if (r.straftaten_details) h += '<div class="danger-box">'+r.straftaten_details+'</div>';
+  if (r.warnungen&&r.warnungen.length) r.warnungen.forEach(function(w){if(w) h+='<div class="warn-box">Plausibilität: '+w+'</div>';});
+
+  h += '<div class="metrics">';
+  h += '<div class="mc"><div class="mc-lbl">Unfallart</div><div class="mc-val">'+r.unfallart+'&nbsp; '+r.unfallart_text+'</div></div>';
+  h += '<div class="mc"><div class="mc-lbl">Unfalltyp</div><div class="mc-val">'+r.unfalltyp+'&nbsp; '+r.unfalltyp_text+'</div></div>';
+  h += '<div class="mc"><div class="mc-lbl">Kategorie</div><div class="mc-val">'+r.kategorie+'&nbsp; '+r.kategorie_text+'</div></div>';
+  h += '<div class="mc"><div class="mc-lbl">TBNR</div><div class="mc-val">'
+    +r.tbnr.map(function(t){return'<span class="chip">'+t+'</span>';}).join('')+'</div></div>';
+  h += '</div>';
+
+  h += '<div class="sec-lbl">Beteiligte</div>';
+  h += '<div class="beteiligte">';
+  h += '<div class="bet-box bet-01"><div class="bet-lbl">01 — Verursacher</div>'
+    +'<div class="bet-val">'+(r.bet01||'—')+'</div>'
+    +(r.bet01_tbnr?'<span class="bet-tbnr">TBNR '+r.bet01_tbnr+'</span>':'')+'</div>';
+  h += '<div class="bet-box bet-02"><div class="bet-lbl">02 — Geschädigter</div>'
+    +'<div class="bet-val">'+(r.bet02||'—')+'</div></div>';
+  h += '</div>';
+
+  h += '<div class="res-card">';
+  h += '<div class="res-row"><span class="res-lbl">Zusammenfassung</span>'
+    +'<span class="res-val" style="text-align:left">'+r.zusammenfassung+'</span></div>';
+  if (r.ursachen&&r.ursachen.length)
+    h += '<div class="res-row"><span class="res-lbl">Unfallursachen</span>'
+      +'<span class="res-val" style="text-align:left">'+r.ursachen.join('<br>')+'</span></div>';
+  h += '<div class="res-row"><span class="res-lbl">Konkretisierung</span>'
+    +'<span class="res-val">'+(r.konkretisierung?'<span style="color:#854f0b">Erforderlich</span>':'Nicht erforderlich')+'</span></div>';
+  h += '</div>';
+
+  var oq = (r.offene_fragen||[]).filter(function(q){return q;});
+  if (oq.length) {
+    h += '<div class="sec-lbl">Offene Fragen</div><ul class="oq-list">';
+    oq.forEach(function(q){ h += '<li>'+q+'</li>'; });
+    h += '</ul>';
+  }
+
+  h += '<div class="warn-box" style="margin-top:14px;font-size:12px;">'
+    +'<strong>Hinweis:</strong> Dieses Ergebnis ist eine Entscheidungshilfe. '
+    +'Alle Angaben eigenverantwortlich auf Richtigkeit prüfen. Fehler sind möglich.</div>';
+
+  document.getElementById('result-content').innerHTML = h;
+  document.querySelectorAll('.btn-analyze').forEach(function(b){b.disabled=false;b.innerHTML='Analysieren';});
+}
+
+/* PWA Service Worker */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
+</body>
+</html>
