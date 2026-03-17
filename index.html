@@ -30,7 +30,7 @@ body{font-family:var(--font);font-size:15px;color:var(--text);background:var(--b
 
 /* HEADER */
 .hdr{border-bottom:0.5px solid var(--border);padding-bottom:1rem;margin-bottom:1.5rem}
-.hdr-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.hdr-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .logo{font-size:18px;font-weight:700;letter-spacing:-.03em;color:var(--text)}
 .logo span{color:var(--info-txt)}
 .badge-hdr{font-size:10px;padding:2px 7px;border-radius:4px;background:var(--info-bg);color:var(--info-txt);font-weight:600;letter-spacing:.04em}
@@ -178,8 +178,8 @@ body{font-family:var(--font);font-size:15px;color:var(--text);background:var(--b
 .mode-hint{font-size:12px;color:var(--text3);margin-top:1rem;padding-top:1rem;border-top:0.5px solid var(--border)}
 
 /* TABS */
-.tab-nav{display:flex;gap:6px;margin-top:12px}
-.tab-btn{padding:6px 16px;border-radius:6px;border:0.5px solid var(--border2);background:var(--bg2);color:var(--text2);font-size:13px;cursor:pointer;font-weight:500;transition:all .15s}
+.tab-nav{display:flex;gap:6px;margin-left:auto}
+.tab-btn{padding:6px 16px;border-radius:6px;border:0.5px solid var(--border2);background:var(--bg2);color:var(--text2);font-size:13px;cursor:pointer;font-weight:500;transition:all .15s;white-space:nowrap}
 .tab-btn:hover{background:var(--bg3)}
 .tab-btn.tab-active{background:var(--text);color:var(--bg);border-color:var(--text)}
 
@@ -200,6 +200,7 @@ body{font-family:var(--font);font-size:15px;color:var(--text);background:var(--b
 .tbnr-text em{font-style:normal;background:rgba(255,200,0,0.25);border-radius:2px;padding:0 2px}
 .tbnr-para{font-size:11px;color:var(--text3);margin-top:5px;font-family:var(--mono)}
 .tbnr-no-result{text-align:center;padding:2rem;color:var(--text3);font-size:14px}
+.tbnr-hinweis{margin:8px 0;padding:8px 12px;background:var(--info-bg);color:var(--info-txt);border-radius:var(--radius-md);font-size:12px;line-height:1.5}
 .tbnr-count{font-size:12px;color:var(--text3);margin-bottom:10px;padding-bottom:8px;border-bottom:0.5px solid var(--border)}
 .tbnr-direct-hit{border-color:var(--info-txt);border-width:1.5px}
 
@@ -215,12 +216,11 @@ body{font-family:var(--font);font-size:15px;color:var(--text);background:var(--b
     <div class="hdr-top">
       <span class="logo">VU<span>spot</span></span>
       <span class="badge-hdr">BETA</span>
-    <div class="hdr-sub">Entscheidungshilfe Verkehrsunfallaufnahme · BKat OWi · 01 = Verursacher · 02 = Geschädigter</div>
-    <div class="tab-nav">
-      <button class="tab-btn tab-active" id="tab-unfall" onclick="switchTab('unfall')">Unfallanalyse</button>
-      <button class="tab-btn" id="tab-tbnr" onclick="switchTab('tbnr')">TBNR-Suche</button>
+      <div class="tab-nav">
+        <button class="tab-btn tab-active" id="tab-unfall" onclick="switchTab('unfall')">Unfallanalyse</button>
+        <button class="tab-btn" id="tab-tbnr" onclick="switchTab('tbnr')">TBNR-Suche</button>
+      </div>
     </div>
-  </div>
 
   <!-- MAIN TAB CONTENT -->
   <div id="main-tab">
@@ -1012,20 +1012,70 @@ async function tbnrAiSearch() {
   var qLower = query.toLowerCase();
   var qWords = qLower.split(/\s+/).filter(function(w){ return w.length > 2; });
   
+  // Synonym/concept expansion for common scenarios
+  var synonymMap = {
+    'wild': ['tier','fahrbahn','schleuder','abkommen','schaden'],
+    'wildschwein': ['tier','fahrbahn','schleuder','abkommen'],
+    'reh': ['tier','fahrbahn'],
+    'tier': ['fahrbahn','schaden','schleuder'],
+    'wildunfall': ['tier','fahrbahn','abkommen','schaden'],
+    'auffahren': ['abstand','vorausfahrend','stehend'],
+    'rotlicht': ['lichtzeichen','rotlicht'],
+    'handy': ['mobiltelefon','elektronisch','kommunikation'],
+    'parken': ['parken','halten','abstellen'],
+    'überholen': ['überhol','abstand','fahrstreifen']
+  };
+  
+  // Expand query words with synonyms
+  var expandedWords = qWords.slice();
+  qWords.forEach(function(w) {
+    for (var key in synonymMap) {
+      if (w.indexOf(key) !== -1 || key.indexOf(w) !== -1) {
+        expandedWords = expandedWords.concat(synonymMap[key]);
+      }
+    }
+  });
+  expandedWords = [...new Set(expandedWords)];
+  
   var candidates = {};
   for (var tbnr in BKAT) {
     var text = BKAT[tbnr].toLowerCase();
-    var matches = qWords.filter(function(w){ return text.indexOf(w) !== -1; }).length;
+    var matches = expandedWords.filter(function(w){ return text.indexOf(w) !== -1; }).length;
     if (matches > 0 || tbnr.startsWith(query.slice(0,3))) {
-      candidates[tbnr] = BKAT[tbnr];
+      candidates[tbnr] = { text: BKAT[tbnr], score: matches };
     }
   }
   
-  // Limit candidates for API call
-  var candKeys = Object.keys(candidates).slice(0, 150);
-  var candText = candKeys.map(function(k){ return k + ': ' + candidates[k]; }).join('\n');
+  // If very few candidates found, always add §1 StVO entries as fallback (101xxx)
+  if (Object.keys(candidates).length < 10) {
+    for (var tbnr in BKAT) {
+      if (tbnr.startsWith('101')) {
+        if (!candidates[tbnr]) candidates[tbnr] = { text: BKAT[tbnr], score: 0 };
+      }
+    }
+  }
   
-  var sysprompt = 'Du bist ein Experte für den Bundeseinheitlichen Tatbestandskatalog OWi (BKat). Benutzer beschreibt eine Ordnungswidrigkeit. Wähle aus den gegebenen TBNR-Einträgen die am besten passenden aus (max. 8). Antworte NUR mit JSON: {"results":[{"tbnr":"101000","relevanz":"hoch","begruendung":"..."}]} Relevanz: hoch/mittel/niedrig.';
+  // Sort by score, take top 150
+  var candKeys = Object.keys(candidates)
+    .sort(function(a,b){ return (candidates[b].score||0) - (candidates[a].score||0); })
+    .slice(0, 150);
+  var candText = candKeys.map(function(k){ return k + ': ' + candidates[k].text; }).join('\n');
+  
+  var sysprompt = `Du bist ein Experte für den Bundeseinheitlichen Tatbestandskatalog OWi (BKat) und Verkehrsrecht.
+
+WICHTIGE FACHREGELN:
+- Wildunfall / Tier auf Fahrbahn: Es gibt KEINE spezifische TBNR für "Wildunfall". Ein Wildunfall ist ein Alleinunfall. Passende TBNR: 101118 (§1 StVO, Schaden durch mangelnde Sorgfalt) oder 101006 (Schleudern mit Sachschaden). Kein Fahrzeugführer begeht eine OWi, wenn er einem Tier ausweicht – nur wenn er z.B. zu schnell war (103xxx).
+- Auffahren auf vorausfahrendes Fahrzeug: 101124+ oder 104106
+- Auffahren auf stehendes Fahrzeug: 101130+
+- Rotlicht: 137600-137602
+- Handy am Steuer: 123624-123631
+- Vorfahrt rechts-vor-links: 108601
+- Vorfahrt Zeichen 205/206: 108607
+
+Benutzer beschreibt eine Ordnungswidrigkeit oder einen Verkehrsunfall. Wähle aus den gegebenen TBNR-Einträgen die am besten passenden aus (max. 6). Falls kein passender Eintrag existiert, erkläre das kurz.
+
+Antworte NUR mit JSON: {"results":[{"tbnr":"101118","relevanz":"hoch","begruendung":"Wildunfall ist Alleinunfall – kein spezifischer OWi-Tatbestand, §1 StVO greift wenn Fahrfehler vorlag"}],"hinweis":"optionaler Hinweis wenn keine gute Übereinstimmung"}
+Relevanz: hoch/mittel/niedrig.`;
   
   var userprompt = 'Gesucht: ' + query + '\n\nVerfügbare TBNR-Einträge:\n' + candText;
   
@@ -1057,7 +1107,7 @@ async function tbnrAiSearch() {
         begruendung: r.begruendung || ''
       };
     }).filter(function(r){ return BKAT[r.tbnr]; });
-    renderTbnrResults(aiResults, query, true);
+    renderTbnrResults(aiResults, query, true, parsed.hinweis || '');
   } catch(e) {
     // Fallback to keyword search
     tbnrLiveSearch(query);
@@ -1068,15 +1118,18 @@ async function tbnrAiSearch() {
 }
 
 /* TBNR RESULTS RENDERN */
-function renderTbnrResults(results, query, isAi) {
+function renderTbnrResults(results, query, isAi, hinweis) {
   var container = document.getElementById('tbnr-results');
   
   if (!results || results.length === 0) {
-    container.innerHTML = '<div class="tbnr-no-result">Keine Treffer für "' + escHtml(query) + '"<br><span style="font-size:12px;color:var(--text3)">Tipp: Kürzere Begriffe oder direkte TBNR-Nummer eingeben</span></div>';
+    var noMsg = '<div class="tbnr-no-result">Keine Treffer für "' + escHtml(query) + '"<br><span style="font-size:12px;color:var(--text3)">Tipp: Kürzere Begriffe oder direkte TBNR-Nummer eingeben</span></div>';
+    if (hinweis) noMsg += '<div class="tbnr-hinweis">ℹ️ ' + escHtml(hinweis) + '</div>';
+    container.innerHTML = noMsg;
     return;
   }
   
   var html = '<div class="tbnr-count">' + results.length + ' Treffer' + (isAi ? ' (KI-Analyse)' : ' (Direktsuche)') + ' · Stand BKat 22.08.2024</div>';
+  if (hinweis) html += '<div class="tbnr-hinweis">ℹ️ ' + escHtml(hinweis) + '</div>';
   
   results.forEach(function(r) {
     var cat = BKAT_CAT[r.tbnr.slice(0,3)] || 'Sonstige';
