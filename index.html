@@ -207,6 +207,16 @@ body{font-family:var(--font);font-size:15px;color:var(--text);background:var(--b
 @media(prefers-color-scheme:dark){
   .tbnr-text em{background:rgba(255,200,0,0.15)}
 }
+
+/* WLIST – Unfallart + Ursachen Liste */
+.wlist{display:flex;flex-direction:column;gap:6px;margin-bottom:1rem;max-height:55vh;overflow-y:auto}
+.wlist-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border:0.5px solid var(--border2);border-radius:var(--radius-md);background:var(--bg);cursor:pointer;text-align:left;transition:all .15s;width:100%}
+.wlist-item:hover{background:var(--bg2);border-color:var(--border3)}
+.wlist-item.sel{background:var(--info-bg);border-color:var(--info-txt);color:var(--info-txt)}
+.wlist-nr{font-size:13px;font-weight:700;min-width:24px;height:24px;border-radius:50%;background:var(--bg3);color:var(--text2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.wlist-item.sel .wlist-nr{background:var(--info-txt);color:var(--bg)}
+.wlist-txt{font-size:13px;color:var(--text);line-height:1.4}
+.wlist-item.sel .wlist-txt{color:var(--info-txt)}
 </style>
 </head>
 <body>
@@ -269,21 +279,24 @@ body{font-family:var(--font);font-size:15px;color:var(--text);background:var(--b
       <div class="pd" id="wp2"></div>
       <div class="pd" id="wp3"></div>
       <div class="pd" id="wp4"></div>
+      <div class="pd" id="wp5"></div>
     </div>
 
-    <!-- W0: Situation -->
+    <!-- W0: Unfallart -->
     <div id="w0">
-      <div class="step-lbl">Schritt 1 von 5</div>
-      <div class="step-q">Was war die Hauptsituation?</div>
-      <div class="tile-grid">
-        <button class="tile" onclick="wSel('sit',0,this)"><div class="tile-icon">↑↑</div><div class="tile-title">Auffahrunfall</div><div class="tile-sub">Auffahren auf vorausfahrendes oder wartendes Fahrzeug (UA 2)</div></button>
-        <button class="tile" onclick="wSel('sit',1,this)"><div class="tile-icon">↗←</div><div class="tile-title">Abbiegen</div><div class="tile-sub">Zusammenstoß beim Rechts- oder Linksabbiegen (UA 5)</div></button>
-        <button class="tile" onclick="wSel('sit',2,this)"><div class="tile-icon">✚</div><div class="tile-title">Kreuzung / Vorfahrt</div><div class="tile-sub">Einbiegen, Kreuzen, Vorfahrt missachtet (UA 5)</div></button>
-        <button class="tile" onclick="wSel('sit',3,this)"><div class="tile-icon">P</div><div class="tile-title">Ruhender Verkehr</div><div class="tile-sub">Parken, Ein-/Ausparken, Türöffnen (UA 1)</div></button>
-        <button class="tile" onclick="wSel('sit',4,this)"><div class="tile-icon">F</div><div class="tile-title">Fußgänger</div><div class="tile-sub">Fahrzeug trifft Fußgänger, Furt, Überweg (UA 6)</div></button>
-        <button class="tile" onclick="wSel('sit',5,this)"><div class="tile-icon">⇄</div><div class="tile-title">Längsverkehr</div><div class="tile-sub">Spurwechsel, Überholen, Gegenverkehr (UA 3/4)</div></button>
-        <button class="tile" onclick="wSel('sit',6,this)"><div class="tile-icon">↖</div><div class="tile-title">Abkommen</div><div class="tile-sub">Alleinunfall, kein weiterer Beteiligter (UA 8/9)</div></button>
-        <button class="tile" onclick="wSel('sit',7,this)"><div class="tile-icon">···</div><div class="tile-title">Sonstiges</div><div class="tile-sub">Tier, Ladung, Hindernis, anderer Art (UA 0/7)</div></button>
+      <div class="step-lbl">Schritt 1 von 6</div>
+      <div class="step-q">Welche Unfallart liegt vor?</div>
+      <div class="wlist" id="ua-list">
+        <button class="wlist-item" onclick="wSelUA(0,this)"><span class="wlist-nr">0</span><span class="wlist-txt"><strong>Anderer Art</strong> — Sturz, geführtes Tier, Ladung, sonstige Art</span></button>
+        <button class="wlist-item" onclick="wSelUA(1,this)"><span class="wlist-nr">1</span><span class="wlist-txt"><strong>Ruhender Verkehr</strong> — Parken, Halten §12, Türöffnen, Ein-/Ausparken</span></button>
+        <button class="wlist-item" onclick="wSelUA(2,this)"><span class="wlist-nr">2</span><span class="wlist-txt"><strong>Vorausfahrendes / wartendes Fahrzeug</strong> — Auffahren, Stau, vor Ampel</span></button>
+        <button class="wlist-item" onclick="wSelUA(3,this)"><span class="wlist-nr">3</span><span class="wlist-txt"><strong>Seitlich gleiche Richtung</strong> — Spurwechsel, Überholen, Längsverkehr</span></button>
+        <button class="wlist-item" onclick="wSelUA(4,this)"><span class="wlist-nr">4</span><span class="wlist-txt"><strong>Entgegenkommend</strong> — Begegnungsverkehr, Frontalzusammenstoß</span></button>
+        <button class="wlist-item" onclick="wSelUA(5,this)"><span class="wlist-nr">5</span><span class="wlist-txt"><strong>Einbiegen / Kreuzen</strong> — Abbiegen, Grundstück einfahren, Vorfahrt</span></button>
+        <button class="wlist-item" onclick="wSelUA(6,this)"><span class="wlist-nr">6</span><span class="wlist-txt"><strong>Fußgänger</strong> — Fahrzeug trifft Fußgänger, Hund, Kinderwagen</span></button>
+        <button class="wlist-item" onclick="wSelUA(7,this)"><span class="wlist-nr">7</span><span class="wlist-txt"><strong>Hindernis auf Fahrbahn</strong> — Wild, Steine, Ladung, Baustelle</span></button>
+        <button class="wlist-item" onclick="wSelUA(8,this)"><span class="wlist-nr">8</span><span class="wlist-txt"><strong>Abkommen nach rechts</strong> — Alleinunfall, Abkommen rechts von Fahrbahn</span></button>
+        <button class="wlist-item" onclick="wSelUA(9,this)"><span class="wlist-nr">9</span><span class="wlist-txt"><strong>Abkommen nach links</strong> — Alleinunfall, Abkommen links von Fahrbahn</span></button>
       </div>
       <div class="row">
         <button class="btn-back" onclick="goStart()">← Zurück</button>
@@ -291,9 +304,20 @@ body{font-family:var(--font);font-size:15px;color:var(--text);background:var(--b
       </div>
     </div>
 
-    <!-- W1: Verletzte -->
+    <!-- W1: Unfallursachen -->
     <div id="w1" style="display:none">
-      <div class="step-lbl">Schritt 2 von 5</div>
+      <div class="step-lbl">Schritt 2 von 6</div>
+      <div class="step-q">Unfallursache(n) <span style="font-size:13px;font-weight:400;color:var(--text2)">(Mehrfachauswahl möglich)</span></div>
+      <div class="wlist" id="ursachen-list"></div>
+      <div class="row">
+        <button class="btn-back" onclick="wStep(0)">Zurück</button>
+        <button class="btn-next" id="btn-w1" onclick="wStep(2)" disabled>Weiter</button>
+      </div>
+    </div>
+
+    <!-- W2: Verletzte -->
+    <div id="w2" style="display:none">
+      <div class="step-lbl">Schritt 3 von 6</div>
       <div class="step-q">Wurden Personen verletzt?</div>
       <div class="inj-grid">
         <button class="inj-tile inj-none" onclick="wSel('inj',0,this)"><div style="font-size:20px">■</div><div class="inj-label" style="color:#3b6d11">Keine Verletzten</div><div class="inj-sub">Nur Sachschaden</div></button>
@@ -302,14 +326,14 @@ body{font-family:var(--font);font-size:15px;color:var(--text);background:var(--b
         <button class="inj-tile inj-fatal" onclick="wSel('inj',3,this)"><div style="font-size:20px">■</div><div class="inj-label">Getötete</div><div class="inj-sub">Tod innerhalb 30 Tage</div></button>
       </div>
       <div class="row">
-        <button class="btn-back" onclick="wStep(0)">Zurück</button>
-        <button class="btn-next" id="btn-w1" onclick="wStep(2)" disabled>Weiter</button>
+        <button class="btn-back" onclick="wStep(1)">Zurück</button>
+        <button class="btn-next" id="btn-w2" onclick="wStep(3)" disabled>Weiter</button>
       </div>
     </div>
 
-    <!-- W2: Alkohol -->
-    <div id="w2" style="display:none">
-      <div class="step-lbl">Schritt 3 von 5</div>
+    <!-- W3: Alkohol -->
+    <div id="w3" style="display:none">
+      <div class="step-lbl">Schritt 4 von 6</div>
       <div class="step-q">Alkohol oder Drogen beteiligt?</div>
       <div class="duo-row">
         <button class="duo-tile" onclick="wSel('alc','ja',this)">Ja — nachgewiesen</button>
@@ -317,28 +341,28 @@ body{font-family:var(--font);font-size:15px;color:var(--text);background:var(--b
         <button class="duo-tile" onclick="wSel('alc','unklar',this)">Unklar / Prüfung läuft</button>
       </div>
       <div class="row">
-        <button class="btn-back" onclick="wStep(1)">Zurück</button>
-        <button class="btn-next" id="btn-w2" onclick="wStep(3)" disabled>Weiter</button>
+        <button class="btn-back" onclick="wStep(2)">Zurück</button>
+        <button class="btn-next" id="btn-w3" onclick="wStep(4)" disabled>Weiter</button>
       </div>
     </div>
 
-    <!-- W3: Fahrerflucht -->
-    <div id="w3" style="display:none">
-      <div class="step-lbl">Schritt 4 von 5</div>
+    <!-- W4: Fahrerflucht -->
+    <div id="w4" style="display:none">
+      <div class="step-lbl">Schritt 5 von 6</div>
       <div class="step-q">Fahrerflucht / unerlaubtes Entfernen vom Unfallort?</div>
       <div class="duo-row">
         <button class="duo-tile" onclick="wSel('flucht','ja',this)">Ja — §142 StGB</button>
         <button class="duo-tile" onclick="wSel('flucht','nein',this)">Nein</button>
       </div>
       <div class="row">
-        <button class="btn-back" onclick="wStep(2)">Zurück</button>
-        <button class="btn-next" id="btn-w3" onclick="wStep(4)" disabled>Weiter</button>
+        <button class="btn-back" onclick="wStep(3)">Zurück</button>
+        <button class="btn-next" id="btn-w4" onclick="wStep(5)" disabled>Weiter</button>
       </div>
     </div>
 
-    <!-- W4: Details + Analyse -->
-    <div id="w4" style="display:none">
-      <div class="step-lbl">Schritt 5 von 5</div>
+    <!-- W5: Details + Analyse -->
+    <div id="w5" style="display:none">
+      <div class="step-lbl">Schritt 6 von 6</div>
       <div class="step-q">Weitere Details? <span style="font-size:14px;font-weight:400;color:var(--text2)">(optional, aber empfohlen)</span></div>
       <div class="input-row">
         <textarea class="ta" id="txt-b" placeholder="Optional: Fahrzeugarten (Pkw/Lkw/Rad), Vorfahrtsregelung (rechts-vor-links / Z 205 / Ampel), Geschwindigkeitsangaben, Fahrbahnverhältnisse, Zeugenaussagen..."></textarea>
@@ -348,8 +372,8 @@ body{font-family:var(--font);font-size:15px;color:var(--text);background:var(--b
       </div>
       <div class="mic-hint" id="micHint2">Mikrofon-Taste drücken und sprechen</div>
       <div class="row">
-        <button class="btn-back" onclick="wStep(3)">Zurück</button>
-        <button class="btn-analyze" id="btn-w4" onclick="analyzeWizard()">Analysieren</button>
+        <button class="btn-back" onclick="wStep(4)">Zurück</button>
+        <button class="btn-analyze" id="btn-w5" onclick="analyzeWizard()">Analysieren</button>
       </div>
     </div>
   </div>
@@ -400,9 +424,101 @@ var API_KEY = prompt("Bitte deinen Anthropic API-Key eingeben (oder Abbrechen f�
 if (!API_KEY) API_KEY = '';
 // ────────────────────────────────────────────────────────
 
-var state = {sit:-1, inj:-1, alc:'', flucht:''};
-var sitLabels = ['Auffahrunfall (Unfallart 2)','Abbiegen (Unfallart 5)','Kreuzung/Vorfahrt (Unfallart 5)','Ruhender Verkehr (Unfallart 1)','Fußgänger (Unfallart 6)','Längsverkehr/Überholen (Unfallart 3/4)','Abkommen von Fahrbahn (Unfallart 8/9)','Sonstiges/Tier/Ladung (Unfallart 0/7)'];
+var state = {ua:-1, ursachen:[], inj:-1, alc:'', flucht:''};
 var injLabels = ['Keine Verletzten (nur Sachschaden)','Leichtverletzte (keine stationäre Aufnahme)','Schwerverletzte (stationäre Behandlung)','Getötete (Tod innerhalb 30 Tage)'];
+
+// Unfallart-Texte
+var uaLabels = [
+  '0 – Anderer Art',
+  '1 – Ruhender Verkehr',
+  '2 – Vorausfahrendes/wartendes Fahrzeug',
+  '3 – Seitlich gleiche Richtung',
+  '4 – Entgegenkommend',
+  '5 – Einbiegen/Kreuzen',
+  '6 – Fußgänger',
+  '7 – Hindernis auf Fahrbahn',
+  '8 – Abkommen nach rechts',
+  '9 – Abkommen nach links'
+];
+
+// Unfallursachen nach Unfallart gefiltert
+var URSACHEN_BY_UA = {
+  0: [[49,'Sonstige Ursache'],[70,'Öl/Glätte Verursacher unbekannt'],[72,'Nässe/Eis/Schnee'],[73,'Sonstige Fahrbahnverhältnisse'],[85,'Baustelle ungesichert'],[86,'Wild auf Fahrbahn'],[87,'Anderes Tier auf Fahrbahn'],[88,'Ladung auf Fahrbahn'],[89,'Sonstiger Gegenstand auf Fahrbahn'],[44,'Sicherungsmangel Fahrzeug'],[46,'Beleuchtungsmängel']],
+  1: [[43,'Unzulässiges Halten/Parken'],[45,'Türöffnen/Einsteigen'],[14,'Sicherheitsabstand beim Vorbeifahren'],[37,'Einfahrfehler (Anfahren vom Fahrbahnrand)'],[49,'Sonstige Ursache']],
+  2: [[14,'Sicherheitsabstand (Auffahren)'],[15,'Bremsen ohne zwingenden Grund'],[13,'Nicht angepasste Geschwindigkeit'],[12,'Geschwindigkeit (absolute Grenze)'],[37,'Einfahrfehler'],[49,'Sonstige Ursache']],
+  3: [[26,'Fahrstreifenwechsel'],[16,'Unzulässiges Rechtsüberholen'],[17,'Überholen trotz Gegenverkehr'],[18,'Überholen unklare Verkehrslage'],[20,'Wiedereinordnen/Ausscheren'],[21,'Schneiden nach Überholen'],[22,'Sonstige Überholfehler'],[23,'Fehler beim Überholtwerden'],[25,'Nichtbeachten Nachfolgender'],[13,'Nicht angepasste Geschwindigkeit'],[49,'Sonstige Ursache']],
+  4: [[11,'Rechtsfahrgebot verletzt'],[17,'Überholen trotz Gegenverkehr'],[13,'Nicht angepasste Geschwindigkeit'],[12,'Geschwindigkeit (absolute Grenze)'],[72,'Nässe/Eis/Schnee'],[49,'Sonstige Ursache']],
+  5: [[27,'Vorfahrt rechts-vor-links missachtet'],[28,'Vorfahrt Z 205/206 missachtet'],[29,'Vorfahrt BAB/Kraftfahrstraße'],[30,'Vorfahrt Feld-/Waldweg'],[31,'Vorrang LZA missachtet'],[32,'Vorrang Z 208 missachtet'],[35,'Abbiegefehler'],[36,'Rückwärtsfahren/Wenden'],[37,'Einfahrfehler'],[13,'Nicht angepasste Geschwindigkeit'],[49,'Sonstige Ursache']],
+  6: [[38,'Fußgänger an Überweg Z 293 nicht beachtet'],[39,'Missachtung Fußgängersignal'],[40,'Abbiegefehler gegenüber Fußgänger'],[41,'Schulbus/Haltestelle nicht beachtet'],[42,'Sonstige Fehler gegenüber Fußgänger'],[13,'Nicht angepasste Geschwindigkeit'],[31,'Vorrang LZA missachtet'],[49,'Sonstige Ursache']],
+  7: [[85,'Baustelle ungesichert'],[86,'Wild auf Fahrbahn'],[87,'Anderes Tier auf Fahrbahn'],[88,'Ladung auf Fahrbahn'],[89,'Sonstiger Gegenstand auf Fahrbahn'],[24,'Fehler beim Vorbeifahren an Hindernissen'],[13,'Nicht angepasste Geschwindigkeit'],[72,'Nässe/Eis/Schnee'],[49,'Sonstige Ursache']],
+  8: [[13,'Nicht angepasste Geschwindigkeit'],[12,'Geschwindigkeit (absolute Grenze)'],[10,'Falsche Fahrbahnbenutzung'],[11,'Rechtsfahrgebot verletzt'],[72,'Nässe/Eis/Schnee'],[73,'Sonstige Fahrbahnverhältnisse'],[04,'Körperliche/geistige Mängel'],[44,'Sicherungsmangel Fahrzeug'],[46,'Beleuchtungsmängel'],[49,'Sonstige Ursache']],
+  9: [[13,'Nicht angepasste Geschwindigkeit'],[12,'Geschwindigkeit (absolute Grenze)'],[10,'Falsche Fahrbahnbenutzung'],[11,'Rechtsfahrgebot verletzt'],[17,'Überholen trotz Gegenverkehr'],[72,'Nässe/Eis/Schnee'],[73,'Sonstige Fahrbahnverhältnisse'],[04,'Körperliche/geistige Mängel'],[44,'Sicherungsmangel Fahrzeug'],[49,'Sonstige Ursache']]
+};
+
+// TBNR-Subset pro Unfallart × Ursache
+var TBNR_SUBSET = {
+  // UA 1 – Ruhender Verkehr
+  '1_43': ['112100','112101','112102','112103'],
+  '1_45': ['114106','114118'],
+  '1_14': ['101012','101136'],
+  '1_37': ['110130','110131'],
+  // UA 2 – Auffahren
+  '2_14': ['101124','104106','101130'],
+  '2_15': ['104118','104119'],
+  '2_13': ['103600','103601','103602','103854'],
+  '2_12': ['103715','103716','103717','103718','103719'],
+  // UA 3 – Seitlich gleiche Richtung
+  '3_26': ['107100','107101','107106'],
+  '3_16': ['105100','105101'],
+  '3_17': ['105606','105607','105608'],
+  '3_18': ['105609','105610','105611'],
+  '3_20': ['105118','105119','105130','105131','105132'],
+  '3_21': ['105124','105125','105126'],
+  '3_23': ['105672','105673'],
+  '3_25': ['105124','105125','105126'],
+  '3_13': ['103600','103601','103602'],
+  // UA 4 – Entgegenkommend
+  '4_11': ['102006','102624','102625','102666','102667'],
+  '4_17': ['105606','105608','105620'],
+  '4_13': ['103600','103602'],
+  // UA 5 – Einbiegen/Kreuzen
+  '5_27': ['108600','108601'],
+  '5_28': ['108606','108607'],
+  '5_29': ['118624','118625','118626'],
+  '5_30': ['108612','108613'],
+  '5_31': ['137600','137601','137602'],
+  '5_32': ['141139','141140','141141'],
+  '5_35': ['109100','109101','109102','109107','109108','109113','109114','109600','109601','109612','109613','109624','109625','109630','109631','109636','109637','109643','109649','109655'],
+  '5_36': ['109642','109643','109648','109649'],
+  '5_37': ['110100','110101','110106','110107','110118','110119','110124','110125','110130','110131'],
+  '5_13': ['103600','103601','103602'],
+  // UA 6 – Fußgänger
+  '6_38': ['126606','126607','126608'],
+  '6_39': ['137100','137101'],
+  '6_40': ['109624','109625'],
+  '6_41': ['120600','120601','120612','120613'],
+  '6_13': ['103709','103600','103602'],
+  '6_31': ['137600','137602'],
+  // UA 7 – Hindernis
+  '7_85': ['101118'],
+  '7_86': ['101118'],
+  '7_87': ['128000','128001'],
+  '7_88': ['101118','132600'],
+  '7_89': ['101118','132600'],
+  '7_24': ['106101','106102'],
+  '7_13': ['103600','103602'],
+  // UA 8/9 – Abkommen
+  '8_13': ['103600','103601','103602','103854'],
+  '8_12': ['103715','103716','103717','103718','103719'],
+  '8_72': ['101006','103618','103619','103620'],
+  '8_11': ['102006','102624'],
+  '8_10': ['102000','102003'],
+  '9_13': ['103600','103601','103602','103854'],
+  '9_12': ['103715','103716','103717','103718','103719'],
+  '9_72': ['101006','103618','103619','103620'],
+  '9_17': ['105606','105608'],
+  '9_11': ['102006','102624']
+};
 var recog = null, isRec = false;
 var micBtnId = null, micTarget = null, micHintId = null;
 var accumulated = '';
@@ -414,17 +530,17 @@ function hide(id) { document.getElementById(id).style.display = 'none'; }
 function goStart() {
   hide('direkt-wrap'); hide('wizard-wrap'); hide('result-wrap');
   show('start-wrap');
-  state = {sit:-1, inj:-1, alc:'', flucht:''};
-  for (var i=0; i<5; i++) {
+  state = {ua:-1, ursachen:[], inj:-1, alc:'', flucht:''};
+  for (var i=0; i<6; i++) {
     var w = document.getElementById('w'+i);
     if (w) w.style.display = 'none';
   }
-  ['btn-w0','btn-w1','btn-w2','btn-w3'].forEach(function(id) {
+  ['btn-w0','btn-w1','btn-w2','btn-w3','btn-w4'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.disabled = true;
   });
-  document.querySelectorAll('.tile,.inj-tile,.duo-tile').forEach(function(t) {
-    t.className = t.className.replace(/\s*(sel|sel-yes|sel-no|sel-unk)\b/g,'');
+  document.querySelectorAll('.wlist-item,.inj-tile,.duo-tile').forEach(function(t) {
+    t.classList.remove('sel','sel-yes','sel-no','sel-unk');
   });
   var ta = document.getElementById('txt-a'); if (ta) ta.value = '';
   var tb = document.getElementById('txt-b'); if (tb) tb.value = '';
@@ -437,36 +553,69 @@ function startMode(m) {
 }
 
 function wStep(n) {
-  for (var i=0; i<5; i++) {
+  for (var i=0; i<6; i++) {
     var el = document.getElementById('w'+i);
     if (el) el.style.display = (i === n) ? 'block' : 'none';
     var pd = document.getElementById('wp'+i);
     if (pd) pd.className = 'pd' + (i < n ? ' done' : i === n ? ' active' : '');
   }
+  // When entering W1 (Ursachen), rebuild the list based on selected UA
+  if (n === 1) buildUrsachenList();
 }
 
 function wSel(field, val, el) {
-  if (field === 'sit') {
-    state.sit = val;
-    document.querySelectorAll('#w0 .tile').forEach(function(t){t.classList.remove('sel');});
-    el.classList.add('sel');
-    document.getElementById('btn-w0').disabled = false;
-  } else if (field === 'inj') {
+  if (field === 'inj') {
     state.inj = val;
-    document.querySelectorAll('#w1 .inj-tile').forEach(function(t){t.classList.remove('sel');});
+    document.querySelectorAll('#w2 .inj-tile').forEach(function(t){t.classList.remove('sel');});
     el.classList.add('sel');
-    document.getElementById('btn-w1').disabled = false;
+    document.getElementById('btn-w2').disabled = false;
   } else if (field === 'alc') {
     state.alc = val;
-    document.querySelectorAll('#w2 .duo-tile').forEach(function(t){t.className='duo-tile';});
+    document.querySelectorAll('#w3 .duo-tile').forEach(function(t){t.className='duo-tile';});
     el.classList.add(val==='ja'?'sel-yes':val==='nein'?'sel-no':'sel-unk');
-    document.getElementById('btn-w2').disabled = false;
+    document.getElementById('btn-w3').disabled = false;
   } else if (field === 'flucht') {
     state.flucht = val;
-    document.querySelectorAll('#w3 .duo-tile').forEach(function(t){t.className='duo-tile';});
+    document.querySelectorAll('#w4 .duo-tile').forEach(function(t){t.className='duo-tile';});
     el.classList.add(val==='ja'?'sel-yes':'sel-no');
-    document.getElementById('btn-w3').disabled = false;
+    document.getElementById('btn-w4').disabled = false;
   }
+}
+
+function wSelUA(ua, el) {
+  state.ua = ua;
+  state.ursachen = [];
+  document.querySelectorAll('#ua-list .wlist-item').forEach(function(t){t.classList.remove('sel');});
+  el.classList.add('sel');
+  document.getElementById('btn-w0').disabled = false;
+}
+
+function buildUrsachenList() {
+  var ua = state.ua;
+  var list = URSACHEN_BY_UA[ua] || [];
+  state.ursachen = [];
+  document.getElementById('btn-w1').disabled = true;
+  var html = '';
+  list.forEach(function(item) {
+    var nr = item[0], label = item[1];
+    html += '<button class="wlist-item" onclick="wToggleUrsache(' + nr + ',this)">'
+      + '<span class="wlist-nr">' + nr + '</span>'
+      + '<span class="wlist-txt">' + label + '</span>'
+      + '</button>';
+  });
+  document.getElementById('ursachen-list').innerHTML = html;
+}
+
+function wToggleUrsache(nr, el) {
+  var idx = state.ursachen.indexOf(nr);
+  if (idx === -1) {
+    state.ursachen.push(nr);
+    el.classList.add('sel');
+  } else {
+    state.ursachen.splice(idx, 1);
+    el.classList.remove('sel');
+  }
+  document.getElementById('btn-w1').disabled = state.ursachen.length === 0;
 }
 
 /* SPRACHEINGABE */
@@ -651,20 +800,20 @@ Spurwechsel/Überholen:
   105142 = Geschwindigkeit erhöht beim Überholtwerden
   105614 = Überholen unklare Verkehrslage
   105620/105626/105632/105638/105644/105650 = Überholen trotz Gegenverkehr (Varianten)
-  105656 = Überholverbot Z 276/277
+  141629 = Überholverbot Z 276/277/277.1 missachtet – Unfall
   105673 = Überholen Wiedereinordnen fehler
   107101 = Fahrstreifenwechsel (Normalfall)
 
 LZA/Ampel:
   137101 = Fußgängerfurt Rot (Fahrzeugführer)
   137602 = Rot an LZA (Fahrzeug)
-  137606/137614 = Radfahrer Rotlicht
+  137614 = Radfahrer/E-Kleinstfahrzeug Rotlicht – Unfall
   137638 = Grünpfeil-Fehler
   137650 = falsche Fahrbahn bei Lichtzeichen
 
 Ruhender Verkehr:
   101012 = seitlicher Abstand nicht eingehalten
-  101054 = Abstand beim Ein-/Ausparken
+  101136 = Ein-/Ausparken aus Parklücke – Kollision mit stehendem Fahrzeug
   101118+ = allgemein (Konkretisierung)
   110131 = Einfahren Fahrbahnrand
   114106 = Türöffnen – Kollision mit Fließverkehr
@@ -685,7 +834,7 @@ Einfahren:
 TBNR-Zuordnung nach Ursache-Kombination (Beispiele):
 - Ursache 14 + UA2 (Auffahren im Längsverkehr) → 101124+/104106 ODER 101130+/104106
 - Ursache 14 + UA1 (seitl. Abstand) → 101012
-- Ursache 14 + UA1 (Ein-/Ausparken) → 101054
+- Ursache 14 + UA1 (Ein-/Ausparken) → 101136
 - Ursache 27 + UA5 (rechts-vor-links) → 108601
 - Ursache 28 + UA5 (Z205/206) → 108607+
 - Ursache 35 + UA5 (Linksabbiegen Gegenverkehr) → 109601
@@ -793,16 +942,42 @@ function analyzeDirectly() {
 }
 
 function analyzeWizard() {
-  var sitL = state.sit >= 0 ? sitLabels[state.sit] : 'unbekannt';
+  var uaL = state.ua >= 0 ? uaLabels[state.ua] : 'unbekannt';
   var injL = state.inj >= 0 ? injLabels[state.inj] : 'unbekannt';
   var txt = (document.getElementById('txt-b').value||'').trim();
+
+  // Build filtered TBNR subset from UA × Ursachen
+  var tbnrSubset = new Set();
+  state.ursachen.forEach(function(ur) {
+    var key = state.ua + '_' + ur;
+    var tbnrs = TBNR_SUBSET[key] || [];
+    tbnrs.forEach(function(t){ tbnrSubset.add(t); });
+  });
+  // Always include some universal ones
+  ['101118','101006','101000'].forEach(function(t){ tbnrSubset.add(t); });
+
+  var subsetList = Array.from(tbnrSubset);
+  var subsetText = subsetList.map(function(t){
+    return t + ': ' + (BKAT[t] ? BKAT[t].substring(0,80) + '...' : '(unbekannt)');
+  }).join('\n');
+
+  var ursachenTxt = state.ursachen.map(function(nr) {
+    var ua = state.ua;
+    var list = URSACHEN_BY_UA[ua] || [];
+    var found = list.find(function(i){ return i[0] === nr; });
+    return nr + ' – ' + (found ? found[1] : 'Ursache ' + nr);
+  }).join(', ');
+
   var msg = 'Unfallsituation (Wizard-Auswahl):\n'
-    + 'Situation: ' + sitL + '\n'
+    + 'Unfallart: ' + uaL + '\n'
+    + 'Unfallursache(n): ' + ursachenTxt + '\n'
     + 'Verletzungsgrad: ' + injL + '\n'
     + 'Alkohol/Drogen: ' + (state.alc || 'nicht angegeben') + '\n'
     + 'Fahrerflucht (§142 StGB): ' + (state.flucht || 'nicht angegeben')
-    + (txt ? '\n\nWeitere Details/Freitext:\n' + txt : '');
-  callAPI(msg, document.getElementById('btn-w4'));
+    + (txt ? '\n\nWeitere Details/Freitext:\n' + txt : '')
+    + '\n\nGEFILTERTE TBNR (nur aus diesen wählen!):\n' + subsetText;
+
+  callAPI(msg, document.getElementById('btn-w5'));
 }
 
 /* ERGEBNIS ANZEIGEN */
